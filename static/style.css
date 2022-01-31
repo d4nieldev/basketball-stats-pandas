@@ -1,0 +1,26 @@
+.dataframe{
+    counter-reset: rowNumber;
+}
+.dataframe>thead>tr{
+    text-align: left !important;
+}
+.dataframe>thead{
+    border-bottom: black 1px solid;
+}
+.dataframe th, td{
+    padding-left: 5rem;
+}
+
+.dataframe thead tr::before{
+    content: "Rank";
+    font-weight: bold;
+}
+.dataframe tbody tr::before{
+    counter-increment: rowNumber;
+    content: counter(rowNumber);
+    font-weight: bold;
+}
+
+.Test{
+    background-color: green;
+}
