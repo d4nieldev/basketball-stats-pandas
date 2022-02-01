@@ -18,29 +18,41 @@
 <body>
 <div class="container-fluid">
     <div id="best_year" class="row">
-        <div class="col-6">
+        <div class="col-4">
             <h1>Season - Best Year</h1>
             {% for table in season_best_year %}
                 {{ table|safe }}
             {% endfor %}
         </div>
-        <div class="col-6">
+        <div class="col-4">
             <h1>Playoffs - Best Year</h1>
             {% for table in playoffs_best_year %}
                 {{ table|safe }}
             {% endfor %}
         </div>
+        <div class="col-4">
+            <h1>Season - Best Year + Playoff - Best 4 Years</h1>
+            {% for table in season_best_year_playoffs_avg %}
+                {{ table|safe }}
+            {% endfor %}
+        </div>
     </div>
     <div id="best4_years" class="row">
-        <div class="col-6">
+        <div class="col-4">
             <h1>Season - Best 4 Years Average</h1>
             {% for table in season_avg_best4 %}
                 {{ table|safe }}
             {% endfor %}
         </div>
-        <div class="col-6">
+        <div class="col-4">
             <h1>Playoffs - Best 4 Years Average</h1>
             {% for table in playoffs_avg_best4 %}
+                {{ table|safe }}
+            {% endfor %}
+        </div>
+        <div class="col-4">
+            <h1>Season - Best 4 Years + Playoff - Best 4 Years</h1>
+            {% for table in season_best_4_years_playoffs_avg %}
                 {{ table|safe }}
             {% endfor %}
         </div>

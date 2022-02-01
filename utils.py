@@ -28,17 +28,38 @@ def get_best_4_years(df):
     return best4
 
 
+def concat_avg_to_4years_playoff(row, df):
+    if row.name in df.index:
+        avg = (df.loc[row.name]['score2'] + row['score2']) / 2
+    else:
+        avg = row['score2'] / 2
+    return avg
+
+
+def get_avg(df1, df2):
+    df1['score2'] = df1.apply(concat_avg_to_4years_playoff, args=(df2,), axis=1)
+    return df1[['Name', 'score2']].sort_values(by='score2', ascending=False)
+
+
 def get_top_100():
     """
     :return: season best year, playoffs best year, season avg best 4, playoffs avg best 4
     """
+    df_best_year_season = get_best_year(df_season)
+    df_best_4_years_season = get_best_4_years(df_season)
+    df_best_4_years_playoffs = get_best_4_years(df_playoffs)
+
     return (
         # season best year
-        get_best_year(df_season).head(100),
+        df_best_year_season.head(100),
         #  playoffs best year
         get_best_year(df_playoffs).head(100),
         # season avg best 4
-        get_best_4_years(df_season).head(100),
+        df_best_4_years_season.head(100),
         # playoffs avg best 4
-        get_best_4_years(df_playoffs).head(100)
+        df_best_4_years_playoffs.head(100),
+        # avg season best year and playoffs best 4 years
+        get_avg(df_best_year_season, df_best_4_years_playoffs).head(100),
+        # avg season best 4 years and playoffs best 4 years
+        get_avg(df_best_4_years_season, df_best_4_years_playoffs).head(100),
     )

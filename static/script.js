@@ -1,5 +1,5 @@
 $(document).ready(function(){
-    $("table thead tr:last-child").remove();
+    $("table thead tr:nth-child(2)").remove();
 
     $("table tbody tr").each(function(){
         const id = $(this).find("th").text()
