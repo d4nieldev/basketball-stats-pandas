@@ -10,7 +10,6 @@
 .dataframe th, td{
     padding-left: 5rem;
 }
-
 .dataframe thead tr::before{
     content: "Rank";
     font-weight: bold;
@@ -20,6 +19,12 @@
     content: counter(rowNumber);
     font-weight: bold;
 }
+/*.dataframe tbody tr{*/
+/*    display: none;*/
+/*}*/
+/*.dataframe tbody tr:nth-of-type(10){*/
+/*    display: block;*/
+/*}*/
 
 .Test{
     background-color: green;

@@ -106,6 +106,13 @@ def get_top_100():
         rows_playoffs[player] = [df_player_playoffs.iloc[0]['Name'], list(df_player_playoffs['Year'].sort_values()),
                                  avg_playoffs]
 
+    df_best4_years_season = pd.DataFrame().from_dict(rows_season, orient='index', columns=['Name', 'Years', 'score2']
+                                              ).sort_values(by='score2', ascending=False)
+    df_best4_years_season.index.name = "id"
+    df_best4_years_playoffs = pd.DataFrame().from_dict(rows_playoffs, orient='index', columns=['Name', 'Years', 'score2']
+                                                       ).sort_values(by='score2', ascending=False)
+    df_best4_years_playoffs.index.name = "id"
+
     return (
         # season best year
         df_season[['id', 'Name', 'Year', 'score2']].groupby('id').agg(
@@ -114,9 +121,7 @@ def get_top_100():
         df_playoffs[['id', 'Name', 'Year', 'score2']].groupby('id').agg(
             {'Name': 'first', 'Year': 'first', 'score2': 'max'}).sort_values(by='score2', ascending=False).head(100),
         # season avg best 4
-        pd.DataFrame().from_dict(rows_season, orient='index', columns=['Name', 'Years', 'score2']).sort_values(
-            by='score2', ascending=False).head(100),
+        df_best4_years_season.head(100),
         # playoffs avg best 4
-        pd.DataFrame().from_dict(rows_playoffs, orient='index', columns=['Name', 'Years', 'score2']).sort_values(
-            by='score2', ascending=False).head(100)
+        df_best4_years_playoffs.head(100)
     )
