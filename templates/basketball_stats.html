@@ -57,6 +57,64 @@
             {% endfor %}
         </div>
     </div>
+    <p id="explanation">
+        control after the block = 57%
+        <br />
+        The chance to score 3 point after offensive rebound = +1%
+        <br />
+        The chance to score 2 point after offensive rebound = +3%
+        <br />
+        The chance to score 3 point after a steal = +2%
+        <br />
+        The chance to score 2 point after a steal = +6%
+        <br />
+        CBLK% = The chance to get a block 0.042
+        <br />
+        CTOV% = The chance to lose the ball 0.126
+        <br />
+        CSTL% = The chance to steal the ball 0.065
+        <br />
+        0.077825770735=Y זה מספר יחס איבודי הכדור בין הרכז לשחקן הממוצע כתלות באסיסט של הרכז
+        <br />
+        TOTAL = 3 x 3P x 3P% + 2 x 2P x 2P% + 1 x FT x FT% + AST VALUE x AST + DRB VALUE x DRB + ORB VALUE x ORB + STL VALUE x STL + BLK VALUE x BLK - TOV VALUE x (TOV / AST x STOV%) - (3 x 3PO x 3PO% + 2 x 2PO x 2PO% + 1 x FTO x FTO%)
+        <br />
+        AST VALUE = 0.66 * (3 x AL3P% x L3P% + 2 x AL2P% x L3P%)
+        <br />
+        DRB VALUE = 3 x OL3P% x L3P% ^ 2 + 2 x OL2P% x L2P% ^ 2 + 2 x OLFT% x LFT% ^ 2 - CBLK% x (3 x OL3P% x L3P% ^ 2 + 2 x OL2P% x L2P% ^ 2) - CTOV% x TOV_VALUE
+        <br />
+        ORB VALUE = 3 x OL3P% x (L3P% + 0.01) ^ 2 + 2 x OL2P% x (L2P% + 0.03) ^ 2 + 2 x OLFT% x LFT% ^ 2 - CBLK% x (3 x OL3P% x L3P% ^ 2 + 2 x OL2P% x L2P% ^ 2) - CTOV% x TOV_VALUE
+        <br />
+        STL VALUE = 3 x OL3P% x (L3P% + 0.02) ^ 2 + 2 x OL2P% x (L2P% + 0.06) ^ 2 + 2 x OLFT% x LFT% ^ 2 - CBLK% x (3 x OL3P% x L3P% ^ 2 + 2 x OL2P% x L2P% ^ 2) - CTOV% x TOV_VALUE
+        <br />
+        BLK VALUE = 0.57 x (3 x OL3P% x L3P% ^ 2 + 2 x OL2P% x L2P% ^ 2 + 2 x OLFT% x LFT% ^ 2 - CBLK% x (3 x OL3P% x L3P% ^ 2 + 2 x OL2P% x L2P% ^ 2) - CTOV% x TOV_VALUE)
+        <br />
+        TOV VALUE = 3 x OL3P% x (L3P% + 0.015) ^ 2 + 2 x OL2P% x (L2P% + 0.05) ^ 2 + 2 x OLFT% x LFT% ^ 2 - CBLK% x (3 x OL3P% x L3P% ^ 2 + 2 x OL2P% x L2P% ^ 2) - CSTL% x
+        <br />
+        AL3P% =
+        <br />
+        L3PA
+        <br />
+        L3PA + L2PA
+        <br />
+        AL2P% =
+        <br />
+        L2PA
+        <br />
+        L3PA + L2PA
+    </p>
+    <p>
+        התוצאה של הנוסחה היא הנקודות שהשחקן קלע וגם הנקודות שגרם לקבוצה שלו ב 100% קליעה
+        <br />
+        רק שנה עם לפחות 3 משחקי פלייאוף נחשבת כדי שיהיה ממוצע מדויק של 4 שנים הכי טובות בפליאוף
+        <br />
+        האתר בוחר את השנה הכי טובה לפי הניקוד של הנוסחה באותה השנה (יעילות).
+        <br />
+        השנה הכי טובה של שחקן יכולה להיות רק עונה שהשחקן שיחק בה 40 משחקים לפחות ולקבוצה היה יחס נצחונות של 48% ומעלה (רק עונה רגילה)
+        <br />
+        האתר מכניס לחישוב רק את השנים 1977-78 ומעלה כי לפני שנים אלו לא היו סופרים איבוד כדור.
+        <br />
+        כל שנה ב 1.8 נתוני השנה הטובה ביותר יתעדכנו אוטומטית.
+    </p>
 </div>
 </body>
 </html>

@@ -12,7 +12,7 @@ import time
 import sys
 import re
 from datetime import datetime
-from formula import LeagueStats, calc_score
+from formula import calc_score
 
 
 def seconds_to_str(time_in_seconds):
@@ -28,6 +28,7 @@ def seconds_to_str(time_in_seconds):
         secs = f"{time_in_seconds % 60}" if time_in_seconds % 60 >= 10 else f"0{time_in_seconds % 60}"
         time_string = f"{time_in_seconds // 60}:{secs} minute(s)"
 
+    # print the time string nicely to correspond with the progressbar
     while len(time_string) < 16:
         time_string = " " + time_string
 
@@ -45,24 +46,34 @@ def get_eta(delta_time, finished, left):
     return seconds_to_str(left / pace)
 
 
-def update_progress_bar(completed, total, start_time, eta, check_eta_every=2, progressbar_length=150):
-    # calculate how much time passed from the start of collecting the data
-    delta_time = time.perf_counter() - start_time
+def update_progress_bar(completed, total, t0, eta, check_eta_every=2, progressbar_length=150):
+    """
+    Prints out a progressbar to the screen and updates it according to completed tasks
 
-    # calculate eta about every 2 seconds
+    :param completed: amount of completed tasks
+    :param total: amount of total tasks
+    :param t0: start time of loading
+    :param eta: time left
+    :param check_eta_every: update the eta every x second(s)
+    :param progressbar_length: how large the bar is
+    :return: eta for next update
+    """
+    # calculate how much time passed from the start of collecting the data
+    delta_time = time.perf_counter() - t0
+
+    # calculate eta about every x second(s)
     if round(delta_time) % check_eta_every == 0:
         eta = get_eta(delta_time, completed, total - completed)
 
     if completed == total:
         eta = "finished"
 
-    # amount of completed players needed to insert '=' in the progress bar
+    # computes the amount of '=' needed to represent completed out of total in terms of progressbar_length
     tick_count = (completed * progressbar_length) // total
 
     # show progress bar
     sys.stdout.write('\r')
-    sys.stdout.write(
-        f"[%-{progressbar_length}s] %d%% %s" % ('=' * tick_count, completed / total * 100, eta))
+    sys.stdout.write(f"[%-{progressbar_length}s] %d%% %s" % ('=' * tick_count, completed / total * 100, eta))
     sys.stdout.flush()
 
     return eta
@@ -104,6 +115,37 @@ def get_players_names():
     return players
 
 
+def extract_player_data(years_rows):
+    """
+    :param years_rows: Beautifulsoup iterable of table rows each row represents a year and stats for this year
+    :return: dict containing the stats from each row labeled by the year
+    """
+    data = {}
+
+    for row in years_rows:
+        # get the year referring this row
+        _, year = row["id"].split(".")
+
+        # get all stats columns for this year
+        stats_cols = row.findAll("td")
+        year_stats = []
+
+        all_td_stats = ["age", "team_id", "lg_id", "pos", "g", "gs", "mp_per_g", "fg_per_g", "fga_per_g", "fg_pct",
+                        "fg3_per_g", "fg3a_per_g", "fg3_pct", "fg2_per_g", "fg2a_per_g", "fg2_pct", "efg_pct",
+                        "ft_per_g", "fta_per_g", "ft_pct", "orb_per_g", "drb_per_g", "trb_per_g", "ast_per_g",
+                        "stl_per_g", "blk_per_g", "tov_per_g", "pf_per_g", "pts_per_g"]
+        for stat in all_td_stats:
+            try:
+                year_stats.append(row.find('td', attrs={'data-stat': stat}).get_text())
+            except AttributeError:
+                year_stats.append(None)
+
+        # add all year stats to all players` years stats
+        data[year] = year_stats
+
+    return data
+
+
 def get_player_stats(key):
     """
     :param key: player key
@@ -124,41 +166,28 @@ def get_player_stats(key):
         # construct empty iterable
         years_rows_playoffs = []
 
-    years_data_season = {}
-    years_data_playoffs = {}
-
-    for i in range(2):
-        years_rows = [years_rows_season, years_rows_playoffs][i]
-        for row in years_rows:
-            # get the year referring this row
-            _, year = row["id"].split(".")
-
-            # get all stats columns for this year
-            stats_cols = row.findAll("td")
-            year_stats = []
-
-            all_td_stats = ["age", "team_id", "lg_id", "pos", "g", "gs", "mp_per_g", "fg_per_g", "fga_per_g", "fg_pct",
-                            "fg3_per_g", "fg3a_per_g", "fg3_pct", "fg2_per_g", "fg2a_per_g", "fg2_pct", "efg_pct",
-                            "ft_per_g", "fta_per_g", "ft_pct", "orb_per_g", "drb_per_g", "trb_per_g", "ast_per_g", "stl_per_g",
-                            "blk_per_g", "tov_per_g", "pf_per_g", "pts_per_g"]
-            for stat in all_td_stats:
-                try:
-                    year_stats.append(row.find('td', attrs={'data-stat': stat}).get_text())
-                except AttributeError:
-                    year_stats.append(None)
-
-            # add all year stats to all players` years stats
-            if i == 0:
-                years_data_season[year] = year_stats
-            else:
-                years_data_playoffs[year] = year_stats
-
-    return key, years_data_season, years_data_playoffs
+    return key, extract_player_data(years_rows_season), extract_player_data(years_rows_playoffs)
 
 
-def prepare_players(df, team_win):
-    df_teams = pd.read_csv('Teams_prep.csv')
+def prepare_players(df, team_win, df_teams):
+    """
+    * Splits Unnamed column to Name and Year columns
+    * Deletes all players that didn't play in the NBA
+    * Deletes all years below 1978
+    * For season - keeps only players with Games >= 40
+    * For season - keeps only players with TmWin% >= 48%
+    * For playoffs - keeps only players with Games >= 3
+    * Converts weight to kg
+    * Converts height to cm
+    * Converts all numeric columns to numeric
+    * Fills up nulls in 2P stats with FG stats
+    * Fills up the rest of the nulls with zeros
+    * Creating the score2 column and calculates for each row
 
+    :param df: players dataframe
+    :param team_win: boolean value represents if there is a need including TmWin% or not
+    :return: prepared dataframe
+    """
     def lbs_to_kg(weight):
         if weight is not None and weight != "":
             return 0.45359237 * weight
@@ -174,9 +203,8 @@ def prepare_players(df, team_win):
         win_rate = df_teams[(df_teams['Tm'] == flag) & (df_teams['Year'] == year)].iloc[0]['WR']
         return win_rate
 
-    # get name and year from
-    df = pd.concat([df, df['Unnamed: 0'].str.split(" ", n=2, expand=True)], axis=1).iloc[:, 1:]
-    df = df.rename(columns={0: 'id', 1: 'Year'})
+    # get name and year from Unnamed column
+    df[['id', 'Year']] = df['Unnamed: 0'].str.split(" ", n=2, expand=True)
 
     # move id and year to start of table
     cols = df.columns.tolist()
@@ -210,7 +238,7 @@ def prepare_players(df, team_win):
 
     # convert all cols to floats
     cols_to_convert = [
-        "From", "To", "Height", "Weight", "Age", "GS", "MP", "FG", "FGA", "FG%", "3P", "3PA", "3P%", "2P",
+        "From", "To", "Age", "GS", "MP", "FG", "FGA", "FG%", "3P", "3PA", "3P%", "2P",
         "2PA", "2P%", "eFG%", "FT", "FTA", "FT%", "ORB", "DRB", "TRB", "AST", "STL", "BLK", "TOV", "PF", "PTS"
     ]
     df[cols_to_convert] = df[cols_to_convert].apply(pd.to_numeric)
@@ -267,17 +295,22 @@ def salvage_players():
     # prepare export to csv
     df_season.to_csv("players_season.csv")
     df_playoffs.to_csv("players_playoffs.csv")
-    prepare_players(pd.read_csv('players_season.csv'), True).to_csv("players_season_prep.csv", index=False)
-    prepare_players(pd.read_csv('players_playoffs.csv'), False).to_csv("players_playoffs_prep.csv", index=False)
+    df_teams = pd.read_csv('ready/Teams_prep.csv')
+    prepare_players(pd.read_csv('players_season.csv'), True, df_teams).to_csv("ready/players_season_prep.csv", index=False)
+    prepare_players(pd.read_csv('players_playoffs.csv'), False, df_teams).to_csv("ready/players_playoffs_prep.csv", index=False)
 
 
 def get_team_win_rates(flag):
+    """
+    :param flag: a team flag
+    :return: flag called with, dictionary containing team win rates by year
+    """
     url = f"https://www.basketball-reference.com/teams/{flag}/"
     content = requests.get(url).content
     soup = BeautifulSoup(content, "html.parser")
     win_rates = {}
 
-    if flag == "TOT":
+    if flag == "TOT":  # played for multiple teams
         for year in range(1946, datetime.now().year+1):
             win_rates[year] = 0.48
     else:
@@ -287,7 +320,7 @@ def get_team_win_rates(flag):
                 year = re.findall(r'\d+', row.find("th").find("a")['href'])[0]
                 win_rates[year] = row.find("td", attrs={"data-stat": "win_loss_pct"}).get_text()
         except AttributeError:
-            # didn't find win rate - probably referencing another flag
+            # need a reference to another team flag
             new_flag = re.findall(r'window.location.href = "\/teams\/(\w+)\/"', str(soup))[0]
             _, win_rates = get_team_win_rates(new_flag)
 
@@ -295,10 +328,14 @@ def get_team_win_rates(flag):
 
 
 def prepare_teams(df):
+    """
+    * Splits Unnamed column to Team and Year
+    :param df: teams dataframe
+    :return: prepared dataframe
+    """
     print("\npreparing teams...")
     # split index column
-    df = pd.concat([df, df['Unnamed: 0'].str.split(" ", n=2, expand=True)], axis=1).iloc[:, 1:]
-    df = df.rename(columns={0: 'Tm', 1: 'Year'})
+    df[['Tm', 'Year']] = df['Unnamed: 0'].str.split(" ", n=2, expand=True)
 
     # rearrange cols
     cols = df.columns.tolist()
@@ -334,7 +371,7 @@ def salvage_teams():
 
     df = pd.DataFrame.from_dict(teams_data, orient="index", columns=['WR'])
     df.to_csv('Teams.csv')
-    prepare_teams(pd.read_csv('Teams.csv')).to_csv("Teams_prep.csv", index=False)
+    prepare_teams(pd.read_csv('Teams.csv')).to_csv("ready/Teams_prep.csv", index=False)
 
 
 program_start = time.perf_counter()

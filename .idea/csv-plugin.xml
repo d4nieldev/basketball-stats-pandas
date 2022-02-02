@@ -10,7 +10,28 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\dataSalvager\Teams_prep.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\dataSalvager\players_playoffs_prep.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\dataSalvager\players_season.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\dataSalvager\players_season_prep.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
@@ -25,6 +46,13 @@
           </value>
         </entry>
         <entry key="\static\data\NBA_season.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\static\data\players_playoffs_prep.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />

@@ -1,7 +1,7 @@
 import pandas as pd
 
-df_season = pd.read_csv("static/data/NBA_season.csv")
-df_playoffs = pd.read_csv("static/data/NBA_playoffs.csv")
+df_season = pd.read_csv("static/data/players_season_prep.csv")
+df_playoffs = pd.read_csv("static/data/players_playoffs_prep.csv")
 
 
 def get_best_year(df):

@@ -11,15 +11,6 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    players_data = pd.read_csv("static/data/NBA_season.csv")
-
-    players = []
-
-    for idx, row in players_data.iterrows():
-        player_string = f'{row["Name"]} ({row["From"]}-{row["To"]})'
-        player_data = [player_string, row['id']]
-        players.append(player_data)
-
     top100 = get_top_100()
     return render_template(
         'basketball_stats.html',
