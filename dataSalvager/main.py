@@ -11,6 +11,61 @@ from itertools import islice
 import time
 import sys
 import re
+from datetime import datetime
+from formula import LeagueStats, calc_score
+
+
+def seconds_to_str(time_in_seconds):
+    """
+    121 => "2:01 minute(s)"
+    :param time_in_seconds: amount of seconds
+    :return: formatted string as minutes or seconds
+    """
+    time_in_seconds = round(time_in_seconds)
+    if time_in_seconds < 60:
+        time_string = f"{time_in_seconds} second(s)"
+    else:
+        secs = f"{time_in_seconds % 60}" if time_in_seconds % 60 >= 10 else f"0{time_in_seconds % 60}"
+        time_string = f"{time_in_seconds // 60}:{secs} minute(s)"
+
+    while len(time_string) < 16:
+        time_string = " " + time_string
+
+    return time_string
+
+
+def get_eta(delta_time, finished, left):
+    """
+    :param delta_time: how much time passed
+    :param finished: amount of players finished
+    :param left: amount of players left
+    :return: Estimated time to finish what's left
+    """
+    pace = finished / delta_time
+    return seconds_to_str(left / pace)
+
+
+def update_progress_bar(completed, total, start_time, eta, check_eta_every=2, progressbar_length=150):
+    # calculate how much time passed from the start of collecting the data
+    delta_time = time.perf_counter() - start_time
+
+    # calculate eta about every 2 seconds
+    if round(delta_time) % check_eta_every == 0:
+        eta = get_eta(delta_time, completed, total - completed)
+
+    if completed == total:
+        eta = "finished"
+
+    # amount of completed players needed to insert '=' in the progress bar
+    tick_count = (completed * progressbar_length) // total
+
+    # show progress bar
+    sys.stdout.write('\r')
+    sys.stdout.write(
+        f"[%-{progressbar_length}s] %d%% %s" % ('=' * tick_count, completed / total * 100, eta))
+    sys.stdout.flush()
+
+    return eta
 
 
 def get_players_names():
@@ -18,7 +73,10 @@ def get_players_names():
     :return: dictionary with general information about every single NBA player (all times)
     """
     players = {}
-
+    print('\ngetting players names...')
+    start = time.perf_counter()
+    eta = ""
+    completed_count = 0
     for letter in ascii_lowercase:
         # get the html page of the current letter and store it in a BeautifulSoup object
         url = f"https://www.basketball-reference.com/players/{letter}/"
@@ -39,6 +97,9 @@ def get_players_names():
                 row.find("td", attrs={"data-stat": "weight"}).get_text()
             ]
             players[key] = player_data
+
+        completed_count += 1
+        eta = update_progress_bar(completed_count, 26, start, eta)
 
     return players
 
@@ -95,48 +156,86 @@ def get_player_stats(key):
     return key, years_data_season, years_data_playoffs
 
 
-def seconds_to_str(time_in_seconds):
-    """
-    121 => "2:01 minute(s)"
-    :param time_in_seconds: amount of seconds
-    :return: formatted string as minutes or seconds
-    """
-    time_in_seconds = round(time_in_seconds)
-    if time_in_seconds < 60:
-        time_string = f"{time_in_seconds} second(s)"
-    else:
-        secs = f"{time_in_seconds % 60}" if time_in_seconds % 60 >= 10 else f"0{time_in_seconds % 60}"
-        time_string = f"{time_in_seconds // 60}:{secs} minute(s)"
+def prepare_players(df, team_win):
+    df_teams = pd.read_csv('Teams_prep.csv')
 
-    while len(time_string) < 16:
-        time_string = " " + time_string
+    def lbs_to_kg(weight):
+        if weight is not None and weight != "":
+            return 0.45359237 * weight
 
-    return time_string
+    def feet_to_cm(height):
+        if height is not None and height != "":
+            feet, inches = height.split("-")
+            return 30.48 * float(feet) + 2.54 * float(inches)
 
+    def get_win_rate(data):
+        flag = data['Tm']
+        year = data['Year']
+        win_rate = df_teams[(df_teams['Tm'] == flag) & (df_teams['Year'] == year)].iloc[0]['WR']
+        return win_rate
 
-def get_eta(delta_time, finished, left):
-    """
-    :param delta_time: how much time passed
-    :param finished: amount of players finished
-    :param left: amount of players left
-    :return: Estimated time to finish what's left
-    """
-    pace = finished / delta_time
-    return seconds_to_str(left / pace)
+    # get name and year from
+    df = pd.concat([df, df['Unnamed: 0'].str.split(" ", n=2, expand=True)], axis=1).iloc[:, 1:]
+    df = df.rename(columns={0: 'id', 1: 'Year'})
+
+    # move id and year to start of table
+    cols = df.columns.tolist()
+    cols = [cols[-2]] + cols[0:6] + [cols[-1]] + cols[6:-2]
+    df = df[cols]
+
+    # delete everyone that is not in the NBA
+    df = df[df['Lg'] == 'NBA']
+
+    # keep only years above 1978
+    df['Year'] = df['Year'].apply(pd.to_numeric)
+    df = df[df['Year'] >= 1978]
+
+    df['G'] = df['G'].apply(pd.to_numeric)
+
+    if team_win:  # season
+        df['TmWin%'] = df[["Tm", "Year"]].apply(get_win_rate, axis=1)
+
+        # keep only win rate above 48
+        df = df[df['TmWin%'] >= 48]
+
+        # keep only years with 40 or more games
+        df = df[df['G'] >= 40]
+    else:  # playoffs
+        # keep only years with 3 or more games
+        df = df[df['G'] >= 3]
+
+    # convert height and weight to cm and kg (respectively)
+    df['Height'] = df['Height'].apply(feet_to_cm)
+    df['Weight'] = df['Weight'].apply(lbs_to_kg)
+
+    # convert all cols to floats
+    cols_to_convert = [
+        "From", "To", "Height", "Weight", "Age", "GS", "MP", "FG", "FGA", "FG%", "3P", "3PA", "3P%", "2P",
+        "2PA", "2P%", "eFG%", "FT", "FTA", "FT%", "ORB", "DRB", "TRB", "AST", "STL", "BLK", "TOV", "PF", "PTS"
+    ]
+    df[cols_to_convert] = df[cols_to_convert].apply(pd.to_numeric)
+
+    # fill 2P nulls with FG
+    df['2P'].fillna(df['FG'], inplace=True)
+    df['2PA'].fillna(df['FGA'], inplace=True)
+    df['2P%'].fillna(df['FG%'], inplace=True)
+
+    # fill other nulls with 0
+    df.fillna(0, inplace=True)
+
+    # add score according to the formula
+    df['score2'] = df.apply(calc_score, axis=1)
+    return df
 
 
 def salvage_players():
     # get all player names
-    sys.stdout.write('getting players names...\n')
     players = get_players_names()
-    sys.stdout.write("collecting data:\n")
+    print("\ncollecting players data...")
     max_players = len(players)
 
     players_data_season = {}
     players_data_playoffs = {}
-
-    check_eta_every = 2
-    progressbar_length = 150
 
     completed_count = 0
 
@@ -156,20 +255,7 @@ def salvage_players():
 
             completed_count += 1
 
-            # calculate how much time passed from the start of collecting the data
-            delta_time = time.perf_counter() - start
-            # calculate eta about every 2 seconds
-            if round(delta_time) % check_eta_every == 0:
-                eta = get_eta(delta_time, completed_count, max_players - completed_count)
-
-            # amount of completed players needed to insert '=' in the progress bar
-            tick_count = (completed_count * progressbar_length) // max_players
-
-            # show progress bar
-            sys.stdout.write('\r')
-            sys.stdout.write(
-                f"[%-{progressbar_length}s] %d%% %s" % ('=' * tick_count, completed_count / max_players * 100, eta))
-            sys.stdout.flush()
+            eta = update_progress_bar(completed_count, max_players, start, eta)
 
     table_map = [
         "Name", "From", "To", "Height", "Weight", "Age", "Tm", "Lg", "Pos", "G", "GS", "MP", "FG", "FGA", "FG%", "3P", "3PA", "3P%", "2P",
@@ -178,31 +264,48 @@ def salvage_players():
     df_season = pd.DataFrame.from_dict(players_data_season, orient="index", columns=table_map)
     df_playoffs = pd.DataFrame.from_dict(players_data_playoffs, orient="index", columns=table_map)
 
-    # export to csv
+    # prepare export to csv
     df_season.to_csv("players_season.csv")
     df_playoffs.to_csv("players_playoffs.csv")
+    prepare_players(pd.read_csv('players_season.csv'), True).to_csv("players_season_prep.csv", index=False)
+    prepare_players(pd.read_csv('players_playoffs.csv'), False).to_csv("players_playoffs_prep.csv", index=False)
 
-    print(f"\nfinished in approximately {seconds_to_str(time.perf_counter() - start)}")
 
-
-def get_team_win_rate(flag):
+def get_team_win_rates(flag):
     url = f"https://www.basketball-reference.com/teams/{flag}/"
     content = requests.get(url).content
     soup = BeautifulSoup(content, "html.parser")
-    pat = r'.(\d+) W-L%'
+    win_rates = {}
 
-    try:
-        win_rate = re.findall(pat, str(soup))[0]
-    except IndexError:
-        # didn't find win rate - probably referencing another flag
+    if flag == "TOT":
+        for year in range(1946, datetime.now().year+1):
+            win_rates[year] = 0.48
+    else:
         try:
+            rows = soup.find("table", attrs={'id': flag}).find("tbody").findAll("tr", attrs={'class': None})
+            for row in rows:
+                year = re.findall(r'\d+', row.find("th").find("a")['href'])[0]
+                win_rates[year] = row.find("td", attrs={"data-stat": "win_loss_pct"}).get_text()
+        except AttributeError:
+            # didn't find win rate - probably referencing another flag
             new_flag = re.findall(r'window.location.href = "\/teams\/(\w+)\/"', str(soup))[0]
-            _, win_rate = get_team_win_rate(new_flag)
-        except IndexError:
-            # no team page
-            win_rate = -1
+            _, win_rates = get_team_win_rates(new_flag)
 
-    return flag, win_rate
+    return flag, win_rates
+
+
+def prepare_teams(df):
+    print("\npreparing teams...")
+    # split index column
+    df = pd.concat([df, df['Unnamed: 0'].str.split(" ", n=2, expand=True)], axis=1).iloc[:, 1:]
+    df = df.rename(columns={0: 'Tm', 1: 'Year'})
+
+    # rearrange cols
+    cols = df.columns.tolist()
+    cols = cols[1:] + [cols[0]]
+    df = df[cols]
+
+    return df
 
 
 def salvage_teams():
@@ -211,17 +314,33 @@ def salvage_teams():
 
     teams_data = {}
 
+    completed_count = 0
+
+    start = time.perf_counter()
+    eta = ""
+    print("\ncollecting teams data...")
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = [executor.submit(get_team_win_rate, team) for team in teams]
+        results = [executor.submit(get_team_win_rates, team) for team in teams]
 
         for f in concurrent.futures.as_completed(results):
-            flag, win_rate = f.result()
-            teams_data[flag] = int(win_rate)
+            flag, win_rates = f.result()
+            for year in win_rates:
+                val = 0 if win_rates[year] == '' else float(win_rates[year]) * 100
+                teams_data[f"{flag} {year}"] = val
+
+            completed_count += 1
+
+            eta = update_progress_bar(completed_count, len(teams), start, eta)
 
     df = pd.DataFrame.from_dict(teams_data, orient="index", columns=['WR'])
-    df['WR'] = df['WR'] / 10
     df.to_csv('Teams.csv')
+    prepare_teams(pd.read_csv('Teams.csv')).to_csv("Teams_prep.csv", index=False)
 
+
+program_start = time.perf_counter()
 
 salvage_teams()
+salvage_players()
+
+print(f"program finished in {seconds_to_str(time.perf_counter() - program_start)}")
 

@@ -3,49 +3,7 @@
   <component name="CsvFileAttributes">
     <option name="attributeMap">
       <map>
-        <entry key="D:\PyCharm Projects\basketball-stats Project\dataSalvager\NBA_playoffs.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="D:\PyCharm Projects\basketball-stats Project\dataSalvager\Teams.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="D:\PyCharm Projects\basketball-stats Project\dataSalvager\players_playoffs.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\NBA_playoffs.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\NBA_season.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\NBA_teams.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\Teams.csv">
+        <entry key="\dataSalvager\Teams.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
@@ -67,13 +25,6 @@
           </value>
         </entry>
         <entry key="\static\data\NBA_season.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\static\data\players_season.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
