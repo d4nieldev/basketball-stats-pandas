@@ -1,7 +1,6 @@
 import pandas as pd
 
-df_season = pd.read_csv("static/data/players_season_prep.csv")
-df_playoffs = pd.read_csv("static/data/players_playoffs_prep.csv")
+
 
 
 def get_best_year(df):
@@ -45,21 +44,23 @@ def get_top_100():
     """
     :return: season best year, playoffs best year, season avg best 4, playoffs avg best 4
     """
-    df_best_year_season = get_best_year(df_season)
-    df_best_4_years_season = get_best_4_years(df_season)
-    df_best_4_years_playoffs = get_best_4_years(df_playoffs)
+    d = {}
+    for v in ["", "_0.05", "_0.04", "_0.03", "_0.02", "_0.01", "_0.005", "_0.001"]:
+        df_season = pd.read_csv(f"static/data/players_season_prep{v}.csv")
+        df_playoffs = pd.read_csv(f"static/data/players_playoffs_prep{v}.csv")
 
-    return (
-        # season best year
-        df_best_year_season.head(100),
-        #  playoffs best year
-        get_best_year(df_playoffs).head(100),
-        # season avg best 4
-        df_best_4_years_season.head(100),
-        # playoffs avg best 4
-        df_best_4_years_playoffs.head(100),
-        # avg season best year and playoffs best 4 years
-        get_avg(df_best_year_season, df_best_4_years_playoffs).head(100),
-        # avg season best 4 years and playoffs best 4 years
-        get_avg(df_best_4_years_season, df_best_4_years_playoffs).head(100),
-    )
+        df_best_year_season = get_best_year(df_season).head(100)
+        df_best_4_years_season = get_best_4_years(df_season).head(100)
+        df_best_4_years_playoffs = get_best_4_years(df_playoffs).head(100)
+        df_best_year_playoffs = get_best_year(df_playoffs).head(100)
+
+        d[f"best year season {v}"] = df_best_year_season.to_html(classes='data')
+        d[f"best year playoffs {v}"] = df_best_year_playoffs.to_html(classes='data')
+        d[f"best 4 years season {v}"] = df_best_4_years_season.to_html(classes='data')
+        d[f"best 4 years playoffs {v}"] = df_best_4_years_playoffs.to_html(classes='data')
+        d[f"best year season + best 4 years playoffs {v}"] = get_avg(df_best_year_season, df_best_4_years_playoffs
+                                                                     ).head(100).to_html(classes='data')
+        d[f"best 4 years season + best 4 years playoffs {v}"] = get_avg(df_best_4_years_season, df_best_4_years_playoffs
+                                                                        ).head(100).to_html(classes='data')
+
+    return d

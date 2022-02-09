@@ -24,6 +24,20 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\static\data\players_playoffs_prep_0.01.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\static\data\players_season_prep_0.01.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
       </map>
     </option>
   </component>
