@@ -57,24 +57,18 @@
             {% endfor %}
         </div>
     </div>
-    <p id="explanation">
-        control after the block = 57%
+    <p>
+        התוצאה של הנוסחה היא הנקודות שהשחקן קלע וגם הנקודות שגרם לקבוצה שלו ב 100% קליעה
         <br />
-        The chance to score 3 point after offensive rebound = +1%
+        רק שנה עם לפחות 3 משחקי פלייאוף נחשבת כדי שיהיה ממוצע מדויק של 4 שנים הכי טובות בפליאוף
         <br />
-        The chance to score 2 point after offensive rebound = +3%
+        האתר בוחר את השנה הכי טובה לפי הניקוד של הנוסחה באותה השנה (יעילות).
         <br />
-        The chance to score 3 point after a steal = +2%
+        השנה הכי טובה של שחקן יכולה להיות רק עונה שהשחקן שיחק בה 40 משחקים לפחות ולקבוצה היה יחס נצחונות של 48% ומעלה (רק עונה רגילה)
         <br />
-        The chance to score 2 point after a steal = +6%
+        האתר מכניס לחישוב רק את השנים 1977-78 ומעלה כי לפני שנים אלו לא היו סופרים איבוד כדור.
         <br />
-        CBLK% = The chance to get a block 0.042
-        <br />
-        CTOV% = The chance to lose the ball 0.126
-        <br />
-        CSTL% = The chance to steal the ball 0.065
-        <br />
-        0.077825770735=Y זה מספר יחס איבודי הכדור בין הרכז לשחקן הממוצע כתלות באסיסט של הרכז
+        כל שנה ב 1.8 נתוני השנה הטובה ביותר יתעדכנו אוטומטית.
         <br />
         TOTAL = 3 x 3P x 3P% + 2 x 2P x 2P% + 1 x FT x FT% + AST VALUE x AST + DRB VALUE x DRB + ORB VALUE x ORB + STL VALUE x STL + BLK VALUE x BLK - TOV VALUE x (TOV / AST x STOV%) - (3 x 3PO x 3PO% + 2 x 2PO x 2PO% + 1 x FTO x FTO%)
         <br />
@@ -101,19 +95,24 @@
         L2PA
         <br />
         L3PA + L2PA
-    </p>
-    <p>
-        התוצאה של הנוסחה היא הנקודות שהשחקן קלע וגם הנקודות שגרם לקבוצה שלו ב 100% קליעה
         <br />
-        רק שנה עם לפחות 3 משחקי פלייאוף נחשבת כדי שיהיה ממוצע מדויק של 4 שנים הכי טובות בפליאוף
+        control after the block = 57%
         <br />
-        האתר בוחר את השנה הכי טובה לפי הניקוד של הנוסחה באותה השנה (יעילות).
+        The chance to score 3 point after offensive rebound = +1%
         <br />
-        השנה הכי טובה של שחקן יכולה להיות רק עונה שהשחקן שיחק בה 40 משחקים לפחות ולקבוצה היה יחס נצחונות של 48% ומעלה (רק עונה רגילה)
+        The chance to score 2 point after offensive rebound = +3%
         <br />
-        האתר מכניס לחישוב רק את השנים 1977-78 ומעלה כי לפני שנים אלו לא היו סופרים איבוד כדור.
+        The chance to score 3 point after a steal = +2%
         <br />
-        כל שנה ב 1.8 נתוני השנה הטובה ביותר יתעדכנו אוטומטית.
+        The chance to score 2 point after a steal = +6%
+        <br />
+        CBLK% = The chance to get a block 0.042
+        <br />
+        CTOV% = The chance to lose the ball 0.126
+        <br />
+        CSTL% = The chance to steal the ball 0.065
+        <br />
+        0.077825770735=Y זה מספר יחס איבודי הכדור בין הרכז לשחקן הממוצע כתלות באסיסט של הרכז
     </p>
 </div>
 </body>
