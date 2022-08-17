@@ -1,4 +1,8 @@
 class LeagueStats:
+    """
+    This class provides constants which will are used for calculating the final score
+    """
+
     p3_league_attack_ratio = 34 / 119  # OL3P%
     p2_league_attack_ratio = 54 / 119  # OL2P%
     ft_league_attack_ratio = 11 / 119  # OLFT%

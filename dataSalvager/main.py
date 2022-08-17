@@ -49,7 +49,6 @@ def get_eta(delta_time, finished, left):
 def update_progress_bar(completed, total, t0, eta, check_eta_every=2, progressbar_length=150):
     """
     Prints out a progressbar to the screen and updates it according to completed tasks
-
     :param completed: amount of completed tasks
     :param total: amount of total tasks
     :param t0: start time of loading
@@ -374,10 +373,12 @@ def salvage_teams():
     prepare_teams(pd.read_csv('Teams.csv')).to_csv("ready/Teams_prep.csv", index=False)
 
 
-program_start = time.perf_counter()
+# execute the script
+if __name__ == "__main__":
+    program_start = time.perf_counter()
 
-salvage_teams()
-salvage_players()
+    salvage_teams()
+    salvage_players()
 
-print(f"program finished in {seconds_to_str(time.perf_counter() - program_start)}")
+    print(f"program finished in {seconds_to_str(time.perf_counter() - program_start)}")
 
